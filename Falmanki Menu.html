@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falmanki Restaurant</title>
+    <link rel="icon" type="jpg" href="Screenshot_2025-10-02_003109-removebg-preview.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;600;700&family=Tajawal:wght@300;400;500;600;700&display=swap');
+        
+        .font-display { font-family: 'Amiri', serif; }
+        .font-body { font-family: 'Tajawal', sans-serif; }
+        
+        /* Lebanese-inspired color palette */
+        .category-mezze { 
+            background: linear-gradient(135deg, #fef7cd 0%, #fbbf24 50%, #f59e0b 100%);
+            border: 2px solid #d97706;
+        }
+        .category-mains { 
+            background: linear-gradient(135deg, #ecfdf5 0%, #10b981 50%, #059669 100%);
+            border: 2px solid #047857;
+        }
+        .category-grills { 
+            background: linear-gradient(135deg, #fef2f2 0%, #ef4444 50%, #dc2626 100%);
+            border: 2px solid #b91c1c;
+        }
+        .category-desserts { 
+            background: linear-gradient(135deg, #f3e8ff 0%, #8b5cf6 50%, #7c3aed 100%);
+            border: 2px solid #6d28d9;
+        }
+        
+        .item-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .item-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .item-card:hover::before {
+            left: 100%;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: #d97706;
+        }
+        
+        .item-card.selected {
+            border-color: #059669;
+            background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%);
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+        }
+        
+        .addon-chip {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
+            font-weight: 500;
+        }
+        
+        .addon-chip:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+            border-color: #d97706;
+        }
+        
+        .addon-chip.selected {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            border-color: #047857;
+            box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        }
+        
+        .order-summary {
+            position: sticky;
+            top: 2rem;
+            background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%);
+            border: 2px solid #f3f4f6;
+        }
+        
+        .arabic-accent {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Lebanese pattern background */
+        body {
+            background: linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%);
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(220, 38, 38, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(5, 150, 105, 0.03) 0%, transparent 50%);
+        }
+        
+        /* Header styling */
+        header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 3px solid #d97706;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Category navigation buttons */
+        .category-nav-btn {
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border: 2px solid transparent;
+        }
+        
+        .category-nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Price styling */
+        .price-tag {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+        }
+        
+        /* Decorative elements */
+        .decorative-border {
+            border-image: linear-gradient(45deg, #dc2626, #059669, #7c3aed) 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-body">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <!-- Falmanki Logo -->
+                <div class="flex justify-center mb-4">
+                    <svg width="200" height="120" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Background decorative circle -->
+                        <circle cx="100" cy="60" r="55" fill="none" stroke="url(#goldGradient)" stroke-width="2" opacity="0.3"/>
+                        
+                        <!-- Decorative border pattern -->
+                        <circle cx="100" cy="60" r="45" fill="none" stroke="url(#redGradient)" stroke-width="1" stroke-dasharray="3,2"/>
+                        
+                        <!-- Lebanese cedar tree silhouette -->
+                        <g transform="translate(85, 25)">
+                            <path d="M15 35 L10 25 L20 25 Z" fill="url(#greenGradient)"/>
+                            <path d="M15 30 L8 18 L22 18 Z" fill="url(#greenGradient)"/>
+                            <path d="M15 25 L6 10 L24 10 Z" fill="url(#greenGradient)"/>
+                            <rect x="14" y="35" width="2" height="8" fill="#8B4513"/>
+                        </g>
+                        
+                        <!-- Arabic text styling -->
+                        <text x="100" y="75" font-family="serif" font-size="18" font-weight="bold" text-anchor="middle" fill="url(#redGradient)">فلمنكي</text>
+                        
+                        <!-- English text -->
+                        <text x="100" y="95" font-family="serif" font-size="14" font-weight="600" text-anchor="middle" fill="#2D3748">FALMANKI</text>
+                        
+                        <!-- Decorative flourishes -->
+                        <path d="M60 85 Q70 80 80 85" stroke="url(#goldGradient)" stroke-width="1.5" fill="none"/>
+                        <path d="M120 85 Q130 80 140 85" stroke="url(#goldGradient)" stroke-width="1.5" fill="none"/>
+                        
+                        <!-- Small decorative dots -->
+                        <circle cx="55" cy="88" r="1.5" fill="url(#goldGradient)"/>
+                        <circle cx="145" cy="88" r="1.5" fill="url(#goldGradient)"/>
+                        
+                        <!-- Gradient definitions -->
+                        <defs>
+                            <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#DC2626;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#B91C1C;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                
+                <h1 class="font-display text-5xl font-bold text-center arabic-accent">فلمنكي</h1>
+                <h2 class="font-display text-3xl font-bold text-gray-900 text-center mt-2">Falmanki</h2>
+                <p class="text-center text-gray-600 mt-2 font-light">Authentic Lebanese Cuisine • مطعم لبناني أصيل</p>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Menu Categories -->
+                <div class="lg:col-span-3">
+                    <div class="mb-8">
+                        <h2 class="font-display text-2xl font-semibold text-gray-900 mb-6">اختر وجبتك المثالية • Build Your Perfect Meal</h2>
+                        
+                        <!-- Category Navigation -->
+                        <div class="flex flex-wrap gap-4 mb-8">
+                            <button onclick="scrollToCategory('mezze')" class="category-nav-btn px-6 py-3 bg-gradient-to-r from-amber-100 to-amber-200 text-amber-900 rounded-full hover:from-amber-200 hover:to-amber-300">
+                                🥙 Mezze & Appetizers
+                            </button>
+                            <button onclick="scrollToCategory('mains')" class="category-nav-btn px-6 py-3 bg-gradient-to-r from-green-100 to-green-200 text-green-900 rounded-full hover:from-green-200 hover:to-green-300">
+                                🍛 Main Dishes
+                            </button>
+                            <button onclick="scrollToCategory('grills')" class="category-nav-btn px-6 py-3 bg-gradient-to-r from-red-100 to-red-200 text-red-900 rounded-full hover:from-red-200 hover:to-red-300">
+                                🔥 Grilled Specialties
+                            </button>
+                            <button onclick="scrollToCategory('desserts')" class="category-nav-btn px-6 py-3 bg-gradient-to-r from-purple-100 to-purple-200 text-purple-900 rounded-full hover:from-purple-200 hover:to-purple-300">
+                                🍯 Desserts
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mezze Section -->
+                    <section id="mezze" class="mb-12">
+                        <div class="category-mezze rounded-2xl p-6 mb-6">
+                            <h3 class="font-display text-3xl font-bold text-amber-900 mb-2">المقبلات • Mezze & Appetizers</h3>
+                            <p class="text-amber-800 font-medium">Traditional Lebanese starters to share</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mezze', 'hummus', 8)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Hummus Beiruti</h4>
+                                    <span class="price-tag text-2xl">$8</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Creamy chickpea dip with tahini, olive oil, and pine nuts</p>
+                                <div class="flex items-center text-sm text-amber-700">
+                                    <span class="bg-amber-100 px-3 py-1 rounded-full">Vegan</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mezze', 'tabbouleh', 9)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Tabbouleh</h4>
+                                    <span class="text-2xl font-bold text-amber-600">$9</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Fresh parsley salad with tomatoes, mint, bulgur, and lemon</p>
+                                <div class="flex items-center text-sm text-amber-700">
+                                    <span class="bg-amber-100 px-3 py-1 rounded-full">Fresh</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mezze', 'fattoush', 10)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Fattoush</h4>
+                                    <span class="text-2xl font-bold text-amber-600">$10</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Mixed greens with crispy pita, sumac, and pomegranate dressing</p>
+                                <div class="flex items-center text-sm text-amber-700">
+                                    <span class="bg-amber-100 px-3 py-1 rounded-full">Signature</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mezze', 'kibbeh', 12)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Kibbeh Nayeh</h4>
+                                    <span class="text-2xl font-bold text-amber-600">$12</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Raw lamb with bulgur, onions, and Lebanese spices</p>
+                                <div class="flex items-center text-sm text-amber-700">
+                                    <span class="bg-amber-100 px-3 py-1 rounded-full">Traditional</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mezze', 'labneh', 7)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Labneh</h4>
+                                    <span class="text-2xl font-bold text-amber-600">$7</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Thick yogurt cheese with olive oil, za'atar, and vegetables</p>
+                                <div class="flex items-center text-sm text-amber-700">
+                                    <span class="bg-amber-100 px-3 py-1 rounded-full">Healthy</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mezze', 'manakish', 6)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Manakish Za'atar</h4>
+                                    <span class="text-2xl font-bold text-amber-600">$6</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Flatbread topped with za'atar herbs and olive oil</p>
+                                <div class="flex items-center text-sm text-amber-700">
+                                    <span class="bg-amber-100 px-3 py-1 rounded-full">Breakfast</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Main Dishes Section -->
+                    <section id="mains" class="mb-12">
+                        <div class="category-mains rounded-2xl p-6 mb-6">
+                            <h3 class="font-display text-3xl font-bold text-green-900 mb-2">الأطباق الرئيسية • Main Dishes</h3>
+                            <p class="text-green-800 font-medium">Hearty Lebanese classics</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mains', 'mansaf', 18)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Mansaf</h4>
+                                    <span class="text-2xl font-bold text-green-600">$18</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Tender lamb in jameed sauce served over rice with almonds</p>
+                                <div class="protein-addons mb-4" id="mansaf-addons" style="display: none;">
+                                    <p class="text-sm font-medium text-gray-700 mb-2">Portion Size:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'mansaf', 'extra-meat', 8)">Extra Meat +$8</span>
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'mansaf', 'extra-rice', 3)">Extra Rice +$3</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center text-sm text-green-700">
+                                    <span class="bg-green-100 px-3 py-1 rounded-full">House Special</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mains', 'makloubeh', 16)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Makloubeh</h4>
+                                    <span class="text-2xl font-bold text-green-600">$16</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Upside-down rice with chicken, eggplant, and aromatic spices</p>
+                                <div class="protein-addons mb-4" id="makloubeh-addons" style="display: none;">
+                                    <p class="text-sm font-medium text-gray-700 mb-2">Protein Choice:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'makloubeh', 'lamb', 4)">Switch to Lamb +$4</span>
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'makloubeh', 'extra-vegetables', 3)">Extra Vegetables +$3</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center text-sm text-green-700">
+                                    <span class="bg-green-100 px-3 py-1 rounded-full">Traditional</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mains', 'ouzi', 20)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Ouzi</h4>
+                                    <span class="text-2xl font-bold text-green-600">$20</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Slow-roasted lamb shoulder with spiced rice and nuts</p>
+                                <div class="flex items-center text-sm text-green-700">
+                                    <span class="bg-green-100 px-3 py-1 rounded-full">Premium</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('mains', 'fattet-hummus', 14)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Fattet Hummus</h4>
+                                    <span class="text-2xl font-bold text-green-600">$14</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Layered dish with chickpeas, yogurt, crispy bread, and pine nuts</p>
+                                <div class="protein-addons mb-4" id="fattet-hummus-addons" style="display: none;">
+                                    <p class="text-sm font-medium text-gray-700 mb-2">Add Protein:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'fattet-hummus', 'lamb', 6)">Lamb +$6</span>
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'fattet-hummus', 'chicken', 5)">Chicken +$5</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center text-sm text-green-700">
+                                    <span class="bg-green-100 px-3 py-1 rounded-full">Comfort Food</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Grilled Specialties Section -->
+                    <section id="grills" class="mb-12">
+                        <div class="category-grills rounded-2xl p-6 mb-6">
+                            <h3 class="font-display text-3xl font-bold text-red-900 mb-2">المشاوي • Grilled Specialties</h3>
+                            <p class="text-red-800 font-medium">Fresh from our charcoal grill</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('grills', 'mixed-grill', 25)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Mixed Grill Platter</h4>
+                                    <span class="text-2xl font-bold text-red-600">$25</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Lamb kofta, chicken tawook, and lamb chops with rice and grilled vegetables</p>
+                                <div class="flex items-center text-sm text-red-700">
+                                    <span class="bg-red-100 px-3 py-1 rounded-full">For Sharing</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('grills', 'shish-tawook', 18)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Shish Tawook</h4>
+                                    <span class="text-2xl font-bold text-red-600">$18</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Marinated chicken skewers with garlic sauce and Lebanese bread</p>
+                                <div class="protein-addons mb-4" id="shish-tawook-addons" style="display: none;">
+                                    <p class="text-sm font-medium text-gray-700 mb-2">Extras:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'shish-tawook', 'extra-skewer', 6)">Extra Skewer +$6</span>
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'shish-tawook', 'extra-garlic-sauce', 2)">Extra Garlic Sauce +$2</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center text-sm text-red-700">
+                                    <span class="bg-red-100 px-3 py-1 rounded-full">Popular</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('grills', 'lamb-kofta', 16)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Lamb Kofta</h4>
+                                    <span class="text-2xl font-bold text-red-600">$16</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Spiced ground lamb skewers with tahini sauce and pita</p>
+                                <div class="protein-addons mb-4" id="lamb-kofta-addons" style="display: none;">
+                                    <p class="text-sm font-medium text-gray-700 mb-2">Spice Level:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'lamb-kofta', 'mild', 0)">Mild</span>
+                                        <span class="addon-chip bg-gray-100 px-3 py-1 rounded-full text-sm cursor-pointer" onclick="toggleAddon(this, 'lamb-kofta', 'spicy', 0)">Spicy 🌶️</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center text-sm text-red-700">
+                                    <span class="bg-red-100 px-3 py-1 rounded-full">Spiced</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('grills', 'grilled-fish', 22)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Grilled Sea Bass</h4>
+                                    <span class="text-2xl font-bold text-red-600">$22</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Whole sea bass with Lebanese herbs, lemon, and tahini sauce</p>
+                                <div class="flex items-center text-sm text-red-700">
+                                    <span class="bg-red-100 px-3 py-1 rounded-full">Fresh Daily</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Desserts Section -->
+                    <section id="desserts" class="mb-12">
+                        <div class="category-desserts rounded-2xl p-6 mb-6">
+                            <h3 class="font-display text-3xl font-bold text-indigo-900 mb-2">الحلويات • Lebanese Sweets</h3>
+                            <p class="text-indigo-800 font-medium">Traditional desserts to complete your meal</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('desserts', 'baklava', 8)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Baklava Assortment</h4>
+                                    <span class="text-2xl font-bold text-indigo-600">$8</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Flaky phyllo pastry with pistachios, walnuts, and honey syrup</p>
+                                <div class="flex items-center text-sm text-indigo-700">
+                                    <span class="bg-indigo-100 px-3 py-1 rounded-full">House Made</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('desserts', 'muhallabia', 6)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Muhallabia</h4>
+                                    <span class="text-2xl font-bold text-indigo-600">$6</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Silky milk pudding with rose water and crushed pistachios</p>
+                                <div class="flex items-center text-sm text-indigo-700">
+                                    <span class="bg-indigo-100 px-3 py-1 rounded-full">Light & Creamy</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('desserts', 'knafeh', 9)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Knafeh Nabulsi</h4>
+                                    <span class="text-2xl font-bold text-indigo-600">$9</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Crispy shredded phyllo with sweet cheese and orange blossom syrup</p>
+                                <div class="flex items-center text-sm text-indigo-700">
+                                    <span class="bg-indigo-100 px-3 py-1 rounded-full">Warm & Sweet</span>
+                                </div>
+                            </div>
+
+                            <div class="item-card bg-white rounded-xl p-6 cursor-pointer" onclick="selectItem('desserts', 'maamoul', 7)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-display text-xl font-semibold text-gray-900">Maamoul Cookies</h4>
+                                    <span class="text-2xl font-bold text-indigo-600">$7</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">Traditional semolina cookies filled with dates, nuts, and figs</p>
+                                <div class="flex items-center text-sm text-indigo-700">
+                                    <span class="bg-indigo-100 px-3 py-1 rounded-full">Festival Special</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Order Summary Sidebar -->
+                <div class="lg:col-span-1">
+                    <div class="order-summary bg-white rounded-2xl p-6 shadow-lg">
+                        <h3 class="font-display text-2xl font-bold text-gray-900 mb-6">طلبك • Your Order</h3>
+                        
+                        <div id="order-items" class="space-y-4 mb-6">
+                            <div class="text-center text-gray-500 py-8">
+                                <div class="text-4xl mb-2">🍽️</div>
+                                <p>ابدأ بناء طلبك</p>
+                                <p class="text-sm">Start building your order by selecting items from the menu</p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <div class="flex justify-between items-center text-xl font-bold">
+                                <span>المجموع • Total:</span>
+                                <span id="order-total" class="text-green-600">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let orderItems = [];
+        let orderTotal = 0;
+
+        function scrollToCategory(categoryId) {
+            document.getElementById(categoryId).scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        function selectItem(category, itemId, price) {
+            const itemCard = event.currentTarget;
+            const itemName = itemCard.querySelector('h4').textContent;
+            
+            // Toggle selection
+            if (itemCard.classList.contains('selected')) {
+                // Remove item
+                itemCard.classList.remove('selected');
+                hideAddons(itemId);
+                removeFromOrder(itemId);
+            } else {
+                // Add item
+                itemCard.classList.add('selected');
+                if (['mansaf', 'makloubeh', 'fattet-hummus', 'shish-tawook', 'lamb-kofta'].includes(itemId)) {
+                    showAddons(itemId);
+                }
+                addToOrder(itemId, itemName, price, category);
+            }
+        }
+
+        function showAddons(itemId) {
+            const addonsDiv = document.getElementById(itemId + '-addons');
+            if (addonsDiv) {
+                addonsDiv.style.display = 'block';
+            }
+        }
+
+        function hideAddons(itemId) {
+            const addonsDiv = document.getElementById(itemId + '-addons');
+            if (addonsDiv) {
+                addonsDiv.style.display = 'none';
+                // Reset all addon selections
+                const addonChips = addonsDiv.querySelectorAll('.addon-chip');
+                addonChips.forEach(chip => {
+                    chip.classList.remove('selected');
+                });
+            }
+        }
+
+        function toggleAddon(element, itemId, addonName, addonPrice) {
+            // For spice level options, only allow one selection
+            if (addonName === 'mild' || addonName === 'spicy') {
+                const parentDiv = element.parentElement;
+                const spiceChips = parentDiv.querySelectorAll('.addon-chip');
+                spiceChips.forEach(chip => chip.classList.remove('selected'));
+            }
+            
+            element.classList.toggle('selected');
+            
+            const orderItem = orderItems.find(item => item.id === itemId);
+            if (orderItem) {
+                if (element.classList.contains('selected')) {
+                    if (!orderItem.addons) orderItem.addons = [];
+                    // Remove existing spice level if adding new one
+                    if (addonName === 'mild' || addonName === 'spicy') {
+                        orderItem.addons = orderItem.addons.filter(addon => addon.name !== 'mild' && addon.name !== 'spicy');
+                    }
+                    orderItem.addons.push({ name: addonName, price: addonPrice });
+                } else {
+                    orderItem.addons = orderItem.addons.filter(addon => addon.name !== addonName);
+                }
+                updateOrderDisplay();
+            }
+        }
+
+        function addToOrder(id, name, price, category) {
+            const existingItem = orderItems.find(item => item.id === id);
+            if (!existingItem) {
+                orderItems.push({
+                    id: id,
+                    name: name,
+                    price: price,
+                    category: category,
+                    addons: []
+                });
+                updateOrderDisplay();
+            }
+        }
+
+        function removeFromOrder(id) {
+            orderItems = orderItems.filter(item => item.id !== id);
+            updateOrderDisplay();
+        }
+
+        function updateOrderDisplay() {
+            const orderItemsDiv = document.getElementById('order-items');
+            const orderTotalSpan = document.getElementById('order-total');
+            
+            if (orderItems.length === 0) {
+                orderItemsDiv.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <div class="text-4xl mb-2">🍽️</div>
+                        <p>ابدأ بناء طلبك</p>
+                        <p class="text-sm">Start building your order by selecting items from the menu</p>
+                    </div>
+                `;
+                orderTotalSpan.textContent = '$0.00';
+                return;
+            }
+
+            let total = 0;
+            let html = '';
+
+            orderItems.forEach(item => {
+                let itemTotal = item.price;
+                let addonsHtml = '';
+                
+                if (item.addons && item.addons.length > 0) {
+                    addonsHtml = '<div class="text-sm text-gray-600 mt-1">';
+                    item.addons.forEach(addon => {
+                        if (addon.price > 0) {
+                            addonsHtml += `<div>+ ${addon.name} (+$${addon.price})</div>`;
+                        } else {
+                            addonsHtml += `<div>+ ${addon.name}</div>`;
+                        }
+                        itemTotal += addon.price;
+                    });
+                    addonsHtml += '</div>';
+                }
+                
+                total += itemTotal;
+                
+                html += `
+                    <div class="border-b pb-3 mb-3 last:border-b-0">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-900">${item.name}</h4>
+                                ${addonsHtml}
+                            </div>
+                            <span class="font-semibold text-gray-900 ml-2">$${itemTotal}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            orderItemsDiv.innerHTML = html;
+            orderTotalSpan.textContent = `$${total.toFixed(2)}`;
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'987f0c30b241e1e4',t:'MTc1OTM1NDA4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
